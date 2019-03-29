@@ -1,30 +1,39 @@
+/* eslint-disable */
 const path = require('path');
+const webpack = require('webpack');
+const merge = require("webpack-merge");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-module.exports = {
-  entry: path.join(__dirname, 'src/index.jsx'),
-  output: {
-    path: path.join(__dirname, 'dist'),
-    filename: '[name].bundle.js',
-  },
-  module: {
-    rules: [{
-      test: /\.(js|jsx)$/,
-      exclude: /(node_modules|bower_components)/,
-      use: [{
-        loader: 'babel-loader',
-      }],
-    }],
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      title: 'Custom template',
-      template: path.join(__dirname, 'src/index.template.html'),
-      filename: './index.html',
-    }),
-  ],
-  stats: {
-    colors: true,
-  },
-  devtool: 'source-map',
+module.exports = env => {
+  const {
+    PLATFORM,
+    VERSION
+  } = env;
+  return merge([{
+    entry: ['@babel/polyfill','./src/index.jsx'],
+    module: {
+      rules: [{
+          test: /\.(js|jsx)$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader'
+          }
+        }
+      ]
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        template: './src/index.template.html',
+        filename: './index.html'
+      }),
+      new webpack.DefinePlugin({
+        'process.env.VERSION': JSON.stringify(env.VERSION),
+        'process.env.PLATFORM': JSON.stringify(env.PLATFORM)
+      }),
+      new CopyWebpackPlugin([{
+        from: 'src/static'
+      }]),
+    ],
+  }])
 };
